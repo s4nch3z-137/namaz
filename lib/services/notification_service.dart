@@ -1,8 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -12,9 +11,9 @@ class NotificationService {
     tz.initializeTimeZones();
 
     try {
-      if (kIsWeb) return; // Skip for web entirely
+      if (kIsWeb) return; 
 
-      if (Platform.isAndroid) {
+      if (defaultTargetPlatform == TargetPlatform.android) {
         const AndroidInitializationSettings initializationSettingsAndroid =
             AndroidInitializationSettings('@mipmap/ic_launcher');
 
@@ -25,7 +24,7 @@ class NotificationService {
 
         await flutterLocalNotificationsPlugin
             .initialize(initializationSettings);
-      } else if (Platform.isIOS) {
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
         const DarwinInitializationSettings initializationSettingsIOS =
             DarwinInitializationSettings();
 
@@ -36,7 +35,7 @@ class NotificationService {
 
         await flutterLocalNotificationsPlugin
             .initialize(initializationSettings);
-      } else if (Platform.isLinux) {
+      } else if (defaultTargetPlatform == TargetPlatform.linux) {
         const LinuxInitializationSettings initializationSettingsLinux =
             LinuxInitializationSettings(defaultActionName: 'Open notification');
 
@@ -60,7 +59,7 @@ class NotificationService {
     try {
       if (kIsWeb) return; // Web doesn't support local scheduled notifications this way
 
-      if (Platform.isAndroid) {
+      if (defaultTargetPlatform == TargetPlatform.android) {
         const AndroidNotificationDetails androidPlatformChannelSpecifics =
             AndroidNotificationDetails('prayer_times_channel', 'Prayer Times',
                 channelDescription: 'Notifications for daily Salah times',
@@ -80,7 +79,7 @@ class NotificationService {
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime);
-      } else if (Platform.isIOS) {
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
         const DarwinNotificationDetails iosPlatformChannelSpecifics =
             DarwinNotificationDetails();
 
@@ -95,7 +94,7 @@ class NotificationService {
             platformChannelSpecifics,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime);
-      } else if (Platform.isLinux) {
+      } else if (defaultTargetPlatform == TargetPlatform.linux) {
         const LinuxNotificationDetails linuxPlatformChannelSpecifics =
             LinuxNotificationDetails();
 
