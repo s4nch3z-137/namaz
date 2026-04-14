@@ -15,6 +15,7 @@ class PrayerProvider with ChangeNotifier {
 
   PrayerTimes? prayerTimes;
   Position? currentPosition;
+  String cityName = "Locating...";
   int currentStreak = 0;
   bool isLoading = true;
 
@@ -36,9 +37,12 @@ class PrayerProvider with ChangeNotifier {
 
     currentPosition = await _locationService.getCurrentLocation();
     if (currentPosition != null) {
+      cityName = await _locationService.getCityName(currentPosition!);
       prayerTimes = _prayerTimeService.getPrayerTimes(currentPosition!, DateTime.now());
       await _scheduleNotifications();
       await _loadTodaysRecords();
+    } else {
+      cityName = "Location Unavailable";
     }
     
     isLoading = false;
@@ -51,16 +55,23 @@ class PrayerProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> logPrayer(String prayerName, PrayerStatus status) async {
+  Future<void> logPrayer(String prayerName, PrayerStatus status, {bool sunnahBefore = false, bool sunnahAfter = false, bool jamaah = false}) async {
     final String todayDate = DateTime.now().toIso8601String().split('T').first;
-    final record = PrayerRecord(date: todayDate, prayerName: prayerName, status: status);
+    final record = PrayerRecord(
+      date: todayDate, 
+      prayerName: prayerName, 
+      status: status,
+      sunnahBefore: sunnahBefore,
+      sunnahAfter: sunnahAfter,
+      jamaah: jamaah,
+    );
     
     await _storageService.savePrayerRecord(record);
     
-    if (status == PrayerStatus.prayedGoldenTime) {
-      await _storageService.incrementStreak();
-    } else if (status == PrayerStatus.missed) {
+    if (status == PrayerStatus.missed) {
       await _storageService.resetStreak();
+    } else {
+      await _storageService.incrementStreak();
     }
     
     currentStreak = await _storageService.getStreak();

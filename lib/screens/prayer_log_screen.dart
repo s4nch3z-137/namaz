@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
@@ -43,55 +44,72 @@ class PrayerLogScreen extends StatelessWidget {
 
     if (record != null) {
       if (record.status == PrayerStatus.prayedGoldenTime) {
-        cardColor = Colors.green.withOpacity(0.2);
-        borderColor = Colors.green;
+        cardColor = Colors.green.withOpacity(0.15);
+        borderColor = Colors.greenAccent.withOpacity(0.5);
       } else if (record.status == PrayerStatus.late) {
-        cardColor = Colors.orange.withOpacity(0.2);
-        borderColor = Colors.orange;
+        cardColor = Colors.orange.withOpacity(0.15);
+        borderColor = Colors.orangeAccent.withOpacity(0.5);
       } else if (record.status == PrayerStatus.missed) {
-        cardColor = Colors.red.withOpacity(0.2);
-        borderColor = Colors.red;
+        cardColor = Colors.red.withOpacity(0.15);
+        borderColor = Colors.redAccent.withOpacity(0.5);
       }
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardColor,
-        border: Border.all(color: borderColor),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                prayerName,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
-              ),
-              if (record != null) _buildStatusBadge(record.status),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (record == null)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildActionBtn(context, provider, prayerName,
-                    PrayerStatus.prayedGoldenTime, "Golden", Colors.green),
-                _buildActionBtn(context, provider, prayerName,
-                    PrayerStatus.late, "Late", Colors.orange),
-                _buildActionBtn(context, provider, prayerName,
-                    PrayerStatus.missed, "Missed", Colors.red),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: cardColor,
+              border: Border.all(color: borderColor, width: 1.5),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                )
               ],
-            )
-        ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      prayerName,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    if (record != null) _buildStatusBadge(record.status),
+                  ],
+                ),
+                if (record == null) ...[
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildActionBtn(context, provider, prayerName,
+                          PrayerStatus.prayedGoldenTime, "Golden", Colors.greenAccent),
+                      _buildActionBtn(context, provider, prayerName,
+                          PrayerStatus.late, "Late", Colors.orangeAccent),
+                      _buildActionBtn(context, provider, prayerName,
+                          PrayerStatus.missed, "Missed", Colors.redAccent),
+                    ],
+                  )
+                ]
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -129,21 +147,27 @@ class PrayerLogScreen extends StatelessWidget {
 
   Widget _buildActionBtn(BuildContext context, PrayerProvider provider,
       String name, PrayerStatus status, String label, Color color) {
-    return InkWell(
-      onTap: () {
-        provider.logPrayer(name, status);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.5)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: InkWell(
+          onTap: () {
+            provider.logPrayer(name, status);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withOpacity(0.3)),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ),
         ),
       ),
     );
