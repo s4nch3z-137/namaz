@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "productId": "Microsoft.VisualStudio.Product.BuildTools",
+  "channelUri": "https://aka.ms/vs/17/release/channel",
+  "installChannelUri": "https://aka.ms/vs/17/release/channel",
+  "installCatalogUri": "https://aka.ms/vs/17/release/catalog.json",
+  "installPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools",
+  "quiet": false,
+  "passive": true,
+  "norestart": true,
+  "includeRecommended": true,
+  "addWorkloads": [
+    "Microsoft.VisualStudio.Workload.NativeDesktop"
+  ],
+  "addComponents": [
+    "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+    "Microsoft.VisualStudio.Component.VC.CMake.Project",
+    "Microsoft.VisualStudio.Component.Windows10SDK.19041",
+    "Microsoft.VisualStudio.Component.VC.Runtimes.x86.x64.Spectre"
+  ]
+}
