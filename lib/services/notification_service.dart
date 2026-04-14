@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
 class NotificationService {
@@ -11,7 +12,8 @@ class NotificationService {
     tz.initializeTimeZones();
 
     try {
-      // Only initialize on mobile platforms that support notifications
+      if (kIsWeb) return; // Skip for web entirely
+
       if (Platform.isAndroid) {
         const AndroidInitializationSettings initializationSettingsAndroid =
             AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -46,18 +48,18 @@ class NotificationService {
         await flutterLocalNotificationsPlugin
             .initialize(initializationSettings);
       }
-      // Note: Web and Windows don't support real notifications in this version
     } catch (e) {
       print('Notification service init error: $e');
-      // Silently fail - app continues without notifications
     }
   }
 
   Future<void> schedulePrayerNotification(
       int id, String prayerName, DateTime time) async {
-    if (time.isBefore(DateTime.now())) return; // Don't schedule in the past
+    if (time.isBefore(DateTime.now())) return; 
 
     try {
+      if (kIsWeb) return; // Web doesn't support local scheduled notifications this way
+
       if (Platform.isAndroid) {
         const AndroidNotificationDetails androidPlatformChannelSpecifics =
             AndroidNotificationDetails('prayer_times_channel', 'Prayer Times',
@@ -109,9 +111,7 @@ class NotificationService {
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime);
       }
-      // Web and Windows: notifications not supported, silently skip
     } catch (e) {
-      // Silently fail on platforms that don't support notifications
       print('Notification scheduling failed: $e');
     }
   }
