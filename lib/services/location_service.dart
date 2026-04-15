@@ -35,7 +35,13 @@ class LocationService {
         return _getDefaultPosition();
       }
 
-      return await Geolocator.getCurrentPosition();
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low,
+        timeLimit: const Duration(seconds: 10),
+      ).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () => _getDefaultPosition(),
+      );
     } catch (e) {
       return _getDefaultPosition();
     }
