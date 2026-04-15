@@ -7,6 +7,32 @@ class StorageService {
   static const String _recordsKey = 'prayer_records';
   static const String _quoteIndexKey = 'daily_quote_index';
   static const String _lastQuoteDateKey = 'last_quote_date';
+  static const String _manualLatKey = 'manual_lat';
+  static const String _manualLngKey = 'manual_lng';
+  static const String _manualCityKey = 'manual_city';
+
+  Future<void> saveManualLocation(double lat, double lng, String city) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_manualLatKey, lat);
+    await prefs.setDouble(_manualLngKey, lng);
+    await prefs.setString(_manualCityKey, city);
+  }
+
+  Future<Map<String, dynamic>?> getManualLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lat = prefs.getDouble(_manualLatKey);
+    final lng = prefs.getDouble(_manualLngKey);
+    final city = prefs.getString(_manualCityKey);
+    if (lat == null || lng == null || city == null) return null;
+    return {'lat': lat, 'lng': lng, 'city': city};
+  }
+
+  Future<void> clearManualLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_manualLatKey);
+    await prefs.remove(_manualLngKey);
+    await prefs.remove(_manualCityKey);
+  }
 
   Future<int> getStreak() async {
     final prefs = await SharedPreferences.getInstance();

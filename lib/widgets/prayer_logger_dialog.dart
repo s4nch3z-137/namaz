@@ -1,7 +1,8 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/prayer_record.dart';
 import '../providers/prayer_provider.dart';
+import '../l10n/kurdish_strings.dart';
 
 class PrayerLoggerDialog extends StatefulWidget {
   final String prayerName;
@@ -36,31 +37,28 @@ class _PrayerLoggerDialogState extends State<PrayerLoggerDialog> {
     }
   }
 
-  bool get _hasSunnahBefore {
-    return ['Fajr', 'Dhuhr', 'Asr'].contains(widget.prayerName);
-  }
+  bool get _hasSunnahBefore =>
+      ['Fajr', 'Dhuhr', 'Asr'].contains(widget.prayerName);
 
-  bool get _hasSunnahAfter {
-    return ['Dhuhr', 'Maghrib', 'Isha'].contains(widget.prayerName);
-  }
+  bool get _hasSunnahAfter =>
+      ['Dhuhr', 'Maghrib', 'Isha'].contains(widget.prayerName);
+
+  bool get _isAlreadyLogged => widget.existingRecord != null;
 
   Color _getThemeColor() {
-    if (_selectedStatus == PrayerStatus.missed) {
-      return Colors.redAccent.shade700;
-    } else if (_selectedStatus == PrayerStatus.prayedGoldenTime ||
+    if (_selectedStatus == PrayerStatus.missed) return Colors.redAccent.shade700;
+    if (_selectedStatus == PrayerStatus.prayedGoldenTime ||
         _selectedStatus == PrayerStatus.late) {
-      if (_sunnahBefore || _sunnahAfter || _jamaah) {
-        return Colors.cyanAccent.shade400; // Divine Blue
-      }
-      return Colors.greenAccent.shade400; // Standard Accepted
+      if (_sunnahBefore || _sunnahAfter || _jamaah) return Colors.cyanAccent.shade400;
+      return Colors.greenAccent.shade400;
     }
-    return Colors.white24; // Pending
+    return Colors.white24;
   }
 
   LinearGradient _getBackgroundGradient() {
     if (_selectedStatus == PrayerStatus.missed) {
       return const LinearGradient(
-        colors: [Color(0xFF2C0B0E), Color(0xFF000000)], // Demonic Black/Red
+        colors: [Color(0xFF2C0B0E), Color(0xFF000000)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -68,13 +66,12 @@ class _PrayerLoggerDialogState extends State<PrayerLoggerDialog> {
         _selectedStatus == PrayerStatus.late) {
       if (_sunnahBefore || _sunnahAfter || _jamaah) {
         return const LinearGradient(
-          colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)], // Divine Heavenly Theme
+          colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       }
     }
-    // Default blue theme
     return const LinearGradient(
       colors: [Color(0xFF1A213D), Color(0xFF141A31)],
       begin: Alignment.topCenter,
@@ -84,109 +81,146 @@ class _PrayerLoggerDialogState extends State<PrayerLoggerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-         gradient: _getBackgroundGradient(),
-         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                "Log ${widget.prayerName} Prayer",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Wrap(
-                alignment: WrapAlignment.spaceEvenly,
-                children: [
-                  _statusButton(PrayerStatus.prayedGoldenTime, "Golden time"),
-                  _statusButton(PrayerStatus.late, "Late"),
-                  _statusButton(PrayerStatus.missed, "Missed"),
-                ],
-              ),
-              
-              if (_selectedStatus == PrayerStatus.prayedGoldenTime || _selectedStatus == PrayerStatus.late) ...[
-                const SizedBox(height: 32),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _getThemeColor().withOpacity(0.5)),
+    return Directionality(textDirection: TextDirection.rtl,
+
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: _getBackgroundGradient(),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Handle
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Extra Deeds Rewards",
-                        style: TextStyle(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      if (_hasSunnahBefore)
-                        _buildCheckbox("Sunnah Before", _sunnahBefore, (val) {
-                          setState(() => _sunnahBefore = val!);
-                        }),
-                      if (_hasSunnahAfter)
-                        _buildCheckbox("Sunnah After", _sunnahAfter, (val) {
-                          setState(() => _sunnahAfter = val!);
-                        }),
-                      _buildCheckbox("Prayed in Jama'ah (Mosque)", _jamaah, (val) {
-                        setState(() => _jamaah = val!);
-                      }),
-                    ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  '${KS.logPrayerTitle} — ${KS.prayerNameKu(widget.prayerName)}',
+                  textAlign: TextAlign.center,
+
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                // Already logged notice
+                if (_isAlreadyLogged) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                    ),
+                    child: const Text(
+                      '⚠️ پێشتر تۆماری کراوە — گۆڕینی تۆمار کاریگەری لەسەر زنجیرە نییە',
+
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.amber, fontSize: 12),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 28),
+                // Status buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _statusButton(PrayerStatus.prayedGoldenTime, KS.goldenTime, '⭐'),
+                    _statusButton(PrayerStatus.late, KS.late, '⏰'),
+                    _statusButton(PrayerStatus.missed, KS.missed, '✗'),
+                  ],
+                ),
+
+                if (_selectedStatus == PrayerStatus.prayedGoldenTime ||
+                    _selectedStatus == PrayerStatus.late) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _getThemeColor().withOpacity(0.5)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          KS.extraDeeds,
+
+                          style: const TextStyle(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16),
+                        ),
+                        const SizedBox(height: 10),
+                        if (_hasSunnahBefore)
+                          _buildCheckbox(KS.sunnahBefore, _sunnahBefore,
+                              (val) => setState(() => _sunnahBefore = val!)),
+                        if (_hasSunnahAfter)
+                          _buildCheckbox(KS.sunnahAfter, _sunnahAfter,
+                              (val) => setState(() => _sunnahAfter = val!)),
+                        _buildCheckbox(KS.prayedInJamaah, _jamaah,
+                            (val) => setState(() => _jamaah = val!)),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 28),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _getThemeColor(),
+                    foregroundColor: _selectedStatus == PrayerStatus.missed
+                        ? Colors.white
+                        : Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    elevation: 10,
+                    shadowColor: _getThemeColor().withOpacity(0.5),
+                  ),
+                  onPressed: _selectedStatus == null
+                      ? null
+                      : () async {
+                          await widget.provider.logPrayer(
+                            widget.prayerName,
+                            _selectedStatus!,
+                            sunnahBefore: _sunnahBefore,
+                            sunnahAfter: _sunnahAfter,
+                            jamaah: _jamaah,
+                          );
+                          if (mounted) Navigator.pop(context);
+                        },
+                  child: Text(
+                    KS.sealRecord,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
-
-              const SizedBox(height: 32),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getThemeColor(),
-                  foregroundColor: _selectedStatus == PrayerStatus.missed ? Colors.white : Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 10,
-                  shadowColor: _getThemeColor().withOpacity(0.5),
-                ),
-                onPressed: _selectedStatus == null ? null : () async {
-                  await widget.provider.logPrayer(
-                    widget.prayerName,
-                    _selectedStatus!,
-                    sunnahBefore: _sunnahBefore,
-                    sunnahAfter: _sunnahAfter,
-                    jamaah: _jamaah,
-                  );
-                  if (mounted) Navigator.pop(context);
-                },
-                child: const Text(
-                  "Seal the Record",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _statusButton(PrayerStatus status, String label) {
+  Widget _statusButton(PrayerStatus status, String label, String emoji) {
     bool isSelected = _selectedStatus == status;
     Color color;
     if (status == PrayerStatus.missed) color = Colors.redAccent;
@@ -194,44 +228,53 @@ class _PrayerLoggerDialogState extends State<PrayerLoggerDialog> {
     else color = Colors.greenAccent;
 
     return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedStatus = status;
-          if (status == PrayerStatus.missed) {
-            _sunnahBefore = false;
-            _sunnahAfter = false;
-            _jamaah = false;
-          }
-        });
-      },
+      onTap: () => setState(() {
+        _selectedStatus = status;
+        if (status == PrayerStatus.missed) {
+          _sunnahBefore = false;
+          _sunnahAfter = false;
+          _jamaah = false;
+        }
+      }),
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.3) : color.withOpacity(0.05),
+          color: isSelected ? color.withOpacity(0.25) : color.withOpacity(0.05),
           border: Border.all(
             color: isSelected ? color : color.withOpacity(0.2),
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.white60,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildCheckbox(String title, bool value, ValueChanged<bool?> onChanged) {
+  Widget _buildCheckbox(
+      String title, bool value, ValueChanged<bool?> onChanged) {
     return Theme(
       data: ThemeData(unselectedWidgetColor: Colors.white54),
       child: CheckboxListTile(
-        title: Text(title, style: const TextStyle(color: Colors.white)),
+        title: Text(title,
+
+            style: const TextStyle(color: Colors.white, fontSize: 14)),
         value: value,
         onChanged: onChanged,
         activeColor: _getThemeColor(),

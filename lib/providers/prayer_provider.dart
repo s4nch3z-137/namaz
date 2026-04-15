@@ -15,11 +15,15 @@ class PrayerProvider with ChangeNotifier {
 
   PrayerTimes? prayerTimes;
   Position? currentPosition;
-  String cityName = "Locating...";
+  String cityName = "دیاریکردنی شوێن...";
   int currentStreak = 0;
   bool isLoading = true;
+  bool isManualLocation = false;
+  int? milestoneReached;
 
   List<PrayerRecord> todaysRecords = [];
+
+  static const _milestones = [7, 30, 100, 365];
 
   PrayerProvider() {
     _init();
@@ -35,18 +39,45 @@ class PrayerProvider with ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    currentPosition = await _locationService.getCurrentLocation();
+    final manual = await _storageService.getManualLocation();
+    if (manual != null) {
+      isManualLocation = true;
+      cityName = manual['city'] as String;
+      currentPosition = Position(
+        latitude: manual['lat'] as double,
+        longitude: manual['lng'] as double,
+        timestamp: DateTime.now(),
+        accuracy: 0, altitude: 0, altitudeAccuracy: 0,
+        heading: 0, headingAccuracy: 0, speed: 0, speedAccuracy: 0,
+      );
+    } else {
+      isManualLocation = false;
+      currentPosition = await _locationService.getCurrentLocation();
+      if (currentPosition != null) {
+        cityName = await _locationService.getCityName(currentPosition!);
+      } else {
+        cityName = "شوێن بەردەست نییە";
+      }
+    }
+
     if (currentPosition != null) {
-      cityName = await _locationService.getCityName(currentPosition!);
       prayerTimes = _prayerTimeService.getPrayerTimes(currentPosition!, DateTime.now());
       await _scheduleNotifications();
       await _loadTodaysRecords();
-    } else {
-      cityName = "Location Unavailable";
     }
-    
+
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> setManualLocation(double lat, double lng, String city) async {
+    await _storageService.saveManualLocation(lat, lng, city);
+    await fetchLocationAndTimes();
+  }
+
+  Future<void> resetToGPS() async {
+    await _storageService.clearManualLocation();
+    await fetchLocationAndTimes();
   }
 
   Future<void> _loadTodaysRecords() async {
@@ -55,27 +86,53 @@ class PrayerProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> logPrayer(String prayerName, PrayerStatus status, {bool sunnahBefore = false, bool sunnahAfter = false, bool jamaah = false}) async {
+  /// Anti-cheat: only the FIRST log of a prayer today affects the streak.
+  /// Re-logging only updates sunnah/jamaah metadata — streak never double-counts.
+  Future<void> logPrayer(
+    String prayerName,
+    PrayerStatus status, {
+    bool sunnahBefore = false,
+    bool sunnahAfter = false,
+    bool jamaah = false,
+  }) async {
     final String todayDate = DateTime.now().toIso8601String().split('T').first;
+
+    final existing = todaysRecords.cast<PrayerRecord?>().firstWhere(
+      (r) => r?.prayerName == prayerName,
+      orElse: () => null,
+    );
+
     final record = PrayerRecord(
-      date: todayDate, 
-      prayerName: prayerName, 
+      date: todayDate,
+      prayerName: prayerName,
       status: status,
       sunnahBefore: sunnahBefore,
       sunnahAfter: sunnahAfter,
       jamaah: jamaah,
     );
-    
+
     await _storageService.savePrayerRecord(record);
-    
-    if (status == PrayerStatus.missed) {
-      await _storageService.resetStreak();
-    } else {
-      await _storageService.incrementStreak();
+
+    // Only touch streak on the very first log of this prayer today
+    if (existing == null) {
+      if (status == PrayerStatus.missed) {
+        await _storageService.resetStreak();
+      } else {
+        await _storageService.incrementStreak();
+        final newStreak = await _storageService.getStreak();
+        if (_milestones.contains(newStreak)) {
+          milestoneReached = newStreak;
+        }
+      }
     }
-    
+
     currentStreak = await _storageService.getStreak();
     await _loadTodaysRecords();
+  }
+
+  void clearMilestone() {
+    milestoneReached = null;
+    notifyListeners();
   }
 
   Future<void> _scheduleNotifications() async {
